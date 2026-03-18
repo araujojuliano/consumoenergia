@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Consumo de Energia</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Classe essencial para o JS alternar a visibilidade dos campos */
+    .escondido { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>Calculadora de Consumo de Energia</h1>
+      <p>Estime o custo dos aparelhos com base na sua última conta de luz e descubra como economizar.</p>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>1) Conta anterior e meta</h2>
+        <p>Informe o valor e o consumo da última conta. O sistema calcula automaticamente o custo efetivo do kWh.</p>
+
+        <form id="form-simulacao" class="form-grid">
+          <div class="field small">
+            <label for="valor_conta_anterior">Valor da última conta (R$)</label>
+            <input type="number" step="0.01" id="valor_conta_anterior" placeholder="Ex.: 250.00" required />
+          </div>
+
+          <div class="field small">
+            <label for="consumo_conta_anterior">Consumo da última conta (kWh)</label>
+            <input type="number" step="0.01" id="consumo_conta_anterior" placeholder="Ex.: 220" required />
+          </div>
+
+          <div class="field small">
+            <label for="custo_kwh_efetivo">Custo efetivo do kWh (R$)</label>
+            <input type="number" step="0.0001" id="custo_kwh_efetivo" readonly placeholder="0.0000" />
+          </div>
+
+          <div class="field small">
+            <label for="meta_reducao">Meta de redução (%)</label>
+            <input type="number" step="0.1" id="meta_reducao" placeholder="Ex.: 10" required />
+          </div>
+
+          <div class="field small">
+            <label for="economia_alvo">Economia-alvo mensal (R$)</label>
+            <input type="number" step="0.01" id="economia_alvo" readonly placeholder="0.00" />
+          </div>
+
+          <div class="field small">
+            <label for="conta_ideal">Meta de conta do mês (R$)</label>
+            <input type="number" step="0.01" id="conta_ideal" readonly placeholder="0.00" />
+          </div>
+
+          <div class="field full">
+            <div class="actions">
+              <button type="submit" class="btn-primary">Calcular e salvar configuração</button>
+              <button type="button" id="btn-limpar-config" class="btn-secondary">Limpar dados</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="note-box" id="parametros-internos"></div>
+        <div class="results-grid" id="simulacao-resultado"></div>
+        <div id="simulacao-alerta"></div>
+      </section>
+
+      <section class="panel">
+        <h2>2) Cadastro de aparelhos da residência</h2>
+        <p>TV, lâmpadas, ventilador e chuveiro usam tempo de uso. Geladeiras e máquinas usam consumo mensal padrão.</p>
+
+        <form id="form-registro" class="form-grid">
+          <div class="field small">
+            <label for="registro_mes">Mês de referência</label>
+            <input type="month" id="registro_mes" required />
+          </div>
+
+          <div class="field">
+            <label for="registro_aparelho_padrao">Modelo do aparelho</label>
+            <select id="registro_aparelho_padrao"></select>
+          </div>
+
+          <div class="field">
+            <label for="registro_aparelho_nome">Nome do aparelho</label>
+            <input type="text" id="registro_aparelho_nome" placeholder="Ex.: TV da sala" required />
+          </div>
+
+          <div class="field small">
+            <label for="registro_tipo_calculo">Tipo de cálculo</label>
+            <input type="text" id="registro_tipo_calculo" readonly placeholder="Automático" />
+          </div>
+
+          <div class="field small escondido" id="campo-potencia">
+            <label for="registro_potencia">Potência (W)</label>
+            <input type="number" step="1" id="registro_potencia" />
+          </div>
+
+          <div class="field small escondido" id="campo-horas">
+            <label for="registro_horas_dia">Horas por dia</label>
+            <input type="number" step="0.1" id="registro_horas_dia" />
+          </div>
+
+          <div class="field small escondido" id="campo-dias-uso">
+            <label for="registro_dias_uso">Dias de uso no mês</label>
+            <input type="number" id="registro_dias_uso" />
+          </div>
+
+          <div class="field small escondido" id="campo-consumo-base">
+            <label for="registro_consumo_base">Consumo padrão (kWh)</label>
+            <input type="number" step="0.01" id="registro_consumo_base" readonly />
+          </div>
+
+          <div class="field small escondido" id="campo-unidade-base">
+            <label for="registro_unidade_base">Unidade</label>
+            <input type="text" id="registro_unidade_base" readonly />
+          </div>
+
+          <div class="field small">
+            <label for="registro_quantidade">Quantidade</label>
+            <input type="number" id="registro_quantidade" value="1" required />
+          </div>
+
+          <div class="field half">
+            <label for="registro_consumo">Consumo estimado (kWh/mês)</label>
+            <input type="number" step="0.01" id="registro_consumo" readonly placeholder="0.00" />
+          </div>
+
+          <div class="field half">
+            <label for="registro_custo">Custo estimado (R$/mês)</label>
+            <input type="number" step="0.01" id="registro_custo" readonly placeholder="0.00" />
+          </div>
+
+          <div class="field full">
+            <label for="registro_obs">Observações</label>
+            <textarea id="registro_obs" placeholder="Ex.: segundo ventilador do quarto, uso maior à noite..."></textarea>
+          </div>
+
+          <div class="field full">
+            <div class="actions">
+              <button type="submit" class="btn-primary">Salvar aparelho</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>3) Painel mensal</h2>
+        <p>Aqui você vê o gasto estimado do mês, a meta definida e o aparelho que mais pesa na conta.</p>
+
+        <div class="form-grid">
+          <div class="field small">
+            <label for="filtro_mes">Mês de análise</label>
+            <input type="month" id="filtro_mes" />
+          </div>
+
+          <div class="field full">
+            <div class="actions">
+              <button type="button" id="btn-exportar-csv" class="btn-secondary">Exportar CSV do mês</button>
+              <button type="button" id="btn-limpar-registros" class="btn-danger">Apagar todos os registros</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-grid" id="painel-mensal"></div>
+        <div id="status-mes"></div>
+
+        <h3>Aparelhos cadastrados no mês</h3>
+        <div id="tabela-registros"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
